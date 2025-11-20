@@ -50,3 +50,10 @@ XTransformed = pipeline.fit_transform(X)
 feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
 
 
+
+# %%
+# Define a pipeline: preprocessing + classifier
+pipeline = Pipeline(steps=[
+    ('preprocessor', preprocessor),
+    ('classifier', RandomForestClassifier(random_state=42))
+])
