@@ -79,12 +79,14 @@ def objective(trial):
 
         # Train model
         model = LogisticRegression(**params,
-                                    n_jobs=1)
+                                    n_jobs=1,
+                                    solver = "saga",
+                                    max_iter=1000000)
         model.fit(X_tr_full, y_tr)
 
         y_pred = model.predict(X_val_full)
 
-        acc = cohen_kappa_score(y_pred, y_val, weigth = "quadratic")
+        acc = cohen_kappa_score(y_pred, y_val, weights= "quadratic")
         cv_scores.append(acc)
 
     # Return mean accuracy so Optuna maximizes it
@@ -119,7 +121,8 @@ X_holdout_full.drop(columns=geo_target, inplace=True)
 X_train_full = pd.concat([X_train_full, X_train_enc], axis=1)
 X_holdout_full = pd.concat([X_holdout_full, X_holdout_enc], axis=1)
 
-final_model = XGBClassifier(**study.best_params, eval_metric='mlogloss', random_state=42, n_jobs=1)
+
+final_model = LogisticRegression(**study.best_params, n_jobs=1, solver = "saga", max_iter=1000000)
 final_model.fit(X_train_full, y_train)
 
 # -----------------------------
