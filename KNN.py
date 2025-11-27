@@ -45,7 +45,7 @@ geo_target = ['geo__geo_level_2_id', 'geo__geo_level_3_id']
 def objective(trial):
     # Hyperparameters for XGBoost
     params = {
-        "n_neighbors": trial.suggest_int("n_neighbors", 2, 20),
+        "n_neighbors": trial.suggest_int("n_neighbors", 5, 30),
         "weights": trial.suggest_categorical("weigths", ["uniform", "distance"]),
         "p": trial.suggest_int("p", 1, 2)
     }
@@ -93,7 +93,7 @@ def objective(trial):
 # Run Optuna
 # -----------------------------
 study = optuna.create_study(direction='maximize')
-study.optimize(objective, n_trials=2, show_progress_bar=True, n_jobs=1)
+study.optimize(objective, n_trials=3, show_progress_bar=True, n_jobs=1)
 
 print("Best params:", study.best_params)
 print("Best CV accuracy:", study.best_value)
@@ -118,21 +118,31 @@ X_holdout_full.drop(columns=geo_target, inplace=True)
 X_train_full = pd.concat([X_train_full, X_train_enc], axis=1)
 X_holdout_full = pd.concat([X_holdout_full, X_holdout_enc], axis=1)
 
+# %%
 
-final_model = KNeighborsClassifier(**study.best_params)
+#Hardcoded, otherwise they do not work
+final_model = KNeighborsClassifier(n_neighbors= 30, weights= "distance", p = 1)
 final_model.fit(X_train_full, y_train)
 
 # -----------------------------
 # Evaluate on holdout
 # -----------------------------
-holdout_acc = final_model.score(X_holdout_full, y_holdout)
+holdout_acc = 1-final_model.score(X_holdout_full, y_holdout)
 print("Holdout accuracy:", holdout_acc)
+
+
 
 # %%
 
+y_pred = final_model.predict(X_holdout_full)
+cohen_kappa_score(y_pred, y_holdout, weights= "quadratic")
+
+# %%
+
+
 import pickle
 
-with open("artifacts/final_model_xgb.pkl", "wb") as f:
+with open("artifacts/final_model_KNN.pkl", "wb") as f:
     pickle.dump(final_model, f)
 
 
